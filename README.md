@@ -1,4 +1,4 @@
-# Job Scheduler
+# Conductor
 
 A service that runs generic jobs on a schedule. Useful for automating incoming
 and outgoing EDI tasks.
