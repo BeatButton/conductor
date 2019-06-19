@@ -77,7 +77,10 @@ class Job:
             if isinstance(start, date):
                 start = datetime.combine(start, time.min)
             elif not isinstance(start, datetime):
-                print(f"Job {job_id} field start should be a date or time", file=err_output)
+                print(
+                    f"Job {job_id} field start should be a date or time",
+                    file=err_output,
+                )
                 raise JobFormatError
 
         end = job.get("end")
@@ -85,7 +88,9 @@ class Job:
             if isinstance(end, date):
                 end = datetime.combine(end, time.min)
             elif not isinstance(end, datetime):
-                print(f"Job {job_id} field end should be a date or time", file=err_output)
+                print(
+                    f"Job {job_id} field end should be a date or time", file=err_output
+                )
                 raise JobFormatError
 
         try:
