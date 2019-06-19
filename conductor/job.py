@@ -74,7 +74,7 @@ class Job:
 
         start = job.get("start")
         if start is not None:
-            if isinstance(start, date):
+            if type(start) is date:
                 start = datetime.combine(start, time.min)
             elif not isinstance(start, datetime):
                 print(
@@ -85,7 +85,7 @@ class Job:
 
         end = job.get("end")
         if end is not None:
-            if isinstance(end, date):
+            if type(end) is date:
                 end = datetime.combine(end, time.min)
             elif not isinstance(end, datetime):
                 print(
