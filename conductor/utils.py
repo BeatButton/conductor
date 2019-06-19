@@ -1,6 +1,6 @@
 import asyncio
 import sys
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from glob import glob
 from typing import Dict, Iterable, TextIO
 
@@ -58,13 +58,13 @@ def get_jobs(*, log_output: TextIO = None, err_output: TextIO = None) -> Iterabl
 
 
 async def schedule_job(job: Job, run_next: datetime = None):
-    today = date.today()
+    now = datetime.now()
 
-    if job.start_date is not None and job.start_date > today:
+    if job.start is not None and job.start > now:
         print(f"Not starting job {job.id}: start date in the future")
         return
 
-    if job.end_date is not None and job.end_date <= today:
+    if job.end is not None and job.end <= now:
         print(f"Not starting job {job.id}: end date in the past")
         return
 

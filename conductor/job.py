@@ -5,7 +5,7 @@ import os
 import subprocess
 import sys
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime, time
 from typing import Any, Dict, List, MutableMapping, Optional, TextIO, Type
 
 from crontab import CronTab
@@ -22,8 +22,8 @@ class Job:
     command: str
     crontab: str
     arguments: Optional[List[str]] = None
-    start_date: Optional[date] = None
-    end_date: Optional[date] = None
+    start: Optional[datetime] = None
+    end: Optional[datetime] = None
     environment: Optional[Dict[str, Any]] = None
 
     @classmethod
@@ -70,6 +70,22 @@ class Job:
         for field, type_ in annot.items():
             if not type_.startswith("Optional") and field not in job:
                 print(f"Job {job_id} missing required field {field}", file=err_output)
+                raise JobFormatError
+
+        start = job.get("start")
+        if start is not None:
+            if isinstance(start, date):
+                start = datetime.combine(start, time.min)
+            elif not isinstance(start, datetime):
+                print(f"Job {job_id} field start should be a date or time", file=err_output)
+                raise JobFormatError
+
+        end = job.get("end")
+        if end is not None:
+            if isinstance(end, date):
+                end = datetime.combine(end, time.min)
+            elif not isinstance(end, datetime):
+                print(f"Job {job_id} field end should be a date or time", file=err_output)
                 raise JobFormatError
 
         try:
