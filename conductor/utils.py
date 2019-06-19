@@ -2,7 +2,7 @@ import asyncio
 import sys
 from datetime import datetime, timedelta
 from glob import glob
-from typing import Dict, Iterable, TextIO
+from typing import MutableMapping, Iterable, TextIO
 
 import toml
 from crontab import CronTab
@@ -20,7 +20,7 @@ def platform_setup():
         )
 
 
-def load_run_next() -> Dict[str, datetime]:
+def load_run_next() -> MutableMapping[str, datetime]:
     try:
         fp = open(RUN_NEXT_FILE_PATH, encoding="utf-8")
     except FileNotFoundError:
@@ -30,12 +30,12 @@ def load_run_next() -> Dict[str, datetime]:
             return toml.load(fp)  # type: ignore
 
 
-def save_run_next(data: Dict[str, datetime]):
+def save_run_next(data: MutableMapping[str, datetime]):
     with open(RUN_NEXT_FILE_PATH, "w", encoding="utf-8") as fp:
         toml.dump(data, fp)
 
 
-def update_run_next(new_data: Dict[str, datetime]):
+def update_run_next(new_data: MutableMapping[str, datetime]):
     data = load_run_next()
     data.update(new_data)
     save_run_next(new_data)

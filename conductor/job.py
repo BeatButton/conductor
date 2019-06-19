@@ -6,7 +6,7 @@ import subprocess
 import sys
 from dataclasses import dataclass
 from datetime import date, datetime, time
-from typing import Any, Dict, List, MutableMapping, Optional, TextIO, Type
+from typing import Any, List, MutableMapping, Optional, TextIO, Type
 
 from crontab import CronTab
 
@@ -24,7 +24,7 @@ class Job:
     arguments: Optional[List[str]] = None
     start: Optional[datetime] = None
     end: Optional[datetime] = None
-    environment: Optional[Dict[str, Any]] = None
+    environment: Optional[MutableMapping[str, Any]] = None
 
     @classmethod
     def from_data(
@@ -49,8 +49,8 @@ class Job:
     @classmethod
     def validate(
         cls, data: MutableMapping[str, Any], filename, *, err_output: TextIO
-    ) -> Dict[str, Any]:
-        job: Optional[Dict[str, Any]] = data.pop("job", None)
+    ) -> MutableMapping[str, Any]:
+        job: Optional[MutableMapping[str, Any]] = data.pop("job", None)
         if job is None:
             print("Job missing [job] section", file=err_output)
             raise JobFormatError
@@ -103,7 +103,11 @@ class Job:
 
     @classmethod
     def warn(
-        cls, job: Dict[str, Any], data: MutableMapping[str, Any], *, log_output: TextIO
+        cls,
+        job: MutableMapping[str, Any],
+        data: MutableMapping[str, Any],
+        *,
+        log_output: TextIO,
     ):
         annot = cls.__annotations__  # pylint: disable=no-member
         job_id = job["id"]
