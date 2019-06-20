@@ -28,6 +28,8 @@ def monkey_patch():
 
     def print_(*args, **kwargs):
         kwargs.setdefault("flush", True)
+        now = datetime.now()
+        args = (now.strftime(r"%Y-%m-%dT%H:%M:%S"), *args)
         return builtin_print(*args, **kwargs)
 
     builtins.print = print_
@@ -110,6 +112,6 @@ async def schedule_job(job: Job, run_next: datetime = None):
         now = datetime.now()
         secs_til_next = tab.next(now, default_utc=False)
         next_run = now + timedelta(seconds=secs_til_next)
-        print(f"{now:%Y-%m-%dT%H:%M:%S} starting job {job.id}")
+        print(f"Starting job {job.id}")
         update_run_next({job.id: next_run})
         await job.run()
