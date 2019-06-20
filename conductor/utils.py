@@ -3,8 +3,8 @@ import builtins
 import os
 import sys
 from datetime import datetime, timedelta
-from typing import MutableMapping, Iterable, TextIO
 from pathlib import Path
+from typing import Iterable, MutableMapping, TextIO
 
 import toml
 from crontab import CronTab
