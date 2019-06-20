@@ -1,4 +1,6 @@
 import asyncio
+import builtins
+import os
 import sys
 from datetime import datetime, timedelta
 from glob import glob
@@ -20,6 +22,26 @@ def platform_setup():
             asyncio.WindowsProactorEventLoopPolicy()  # type: ignore
         )
 
+
+def monkey_patch():
+    builtin_print = builtins.print
+    def print_(*args, **kwargs):
+        kwargs.setdefault("flush", True)
+        return builtin_print(*args, **kwargs)
+
+    builtins.print = print_
+
+def process_env_vars():
+    jobs_dir = os.environ.get("CONDUCTOR_JOBS_DIR")
+    if jobs_dir is not None:
+        utils.JOBS_DIR = jobs_dir
+    if not os.path.isdir(utils.JOBS_DIR):
+        print(f"Job directory {utils.JOBS_DIR} is not a directory")
+        exit(1)
+
+    run_next_dir = os.environ.get("CONDUCTOR_RUN_NEXT_DIR")
+    if run_next_dir is not None:
+        utils.RUN_NEXT_DIR = run_next_dir
 
 def load_run_next() -> MutableMapping[str, datetime]:
     try:
@@ -43,7 +65,7 @@ def update_run_next(new_data: MutableMapping[str, datetime]):
 
 
 def get_jobs(*, log_output: TextIO = None, err_output: TextIO = None) -> Iterable[Job]:
-    for filename in glob("jobs/*.toml"):
+    for filename in glob(f"{JOBS_DIR}/*.toml"):
         try:
             with open(filename, encoding="utf-8") as fp:
                 data = toml.load(fp)

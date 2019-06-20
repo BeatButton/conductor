@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import asyncio
 import io
-import os
 import sys
 import traceback
 from datetime import datetime
@@ -51,7 +50,7 @@ class Main:
                 e = task.exception()
                 if e is not None:
                     print(f"Task {job_id} failed with exception:")
-                    traceback.print_exception(type(e), e, e.__traceback__)
+                    traceback.print_exception(type(e), e, e.__traceback__, file=sys.stdout)
 
     async def poll(self):
         self.load_jobs()
@@ -72,15 +71,10 @@ class Main:
 
 if __name__ == "__main__":
     utils.platform_setup()
+    utils.monkey_patch()
+    utils.process_env_vars()
+
     main = Main()
-
-    jobs_dir = os.environ.get("CONDUCTOR_JOBS_DIR")
-    if jobs_dir is not None:
-        utils.JOBS_DIR = jobs_dir
-
-    run_next_dir = os.environ.get("CONDUCTOR_RUN_NEXT_DIR")
-    if run_next_dir is not None:
-        utils.RUN_NEXT_DIR = run_next_dir
 
     try:
         asyncio.run(main.poll())
