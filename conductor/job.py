@@ -10,6 +10,8 @@ from typing import Any, List, MutableMapping, Optional, TextIO, Type
 
 from crontab import CronTab
 
+import utils
+
 
 class JobFormatError(Exception):
     pass
@@ -21,7 +23,6 @@ class Job:
     id: str
     command: str
     crontab: str
-    arguments: Optional[List[str]] = None
     start: Optional[datetime] = None
     end: Optional[datetime] = None
     environment: Optional[MutableMapping[str, Any]] = None
@@ -121,12 +122,11 @@ class Job:
             print(f"Job {job_id} had extra section {section}", file=log_output)
 
     async def run(self):
-        args = self.arguments or []
-        process = await asyncio.create_subprocess_exec(
+        process = await asyncio.create_subprocess_shell(
             self.command,
-            *args,
             stdout=subprocess.DEVNULL,
             stderr=sys.stderr,
             env=self.environment,
+            cwd=utils.JOBS_DIR,
         )
         await process.wait()
