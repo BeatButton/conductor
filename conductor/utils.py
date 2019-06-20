@@ -9,7 +9,8 @@ from crontab import CronTab
 
 from job import Job, JobFormatError
 
-RUN_NEXT_FILE_PATH: str = "config/run_next.blob"
+RUN_NEXT_DIR: str = "config"
+JOBS_DIR: str = "jobs"
 
 
 def platform_setup():
@@ -22,7 +23,7 @@ def platform_setup():
 
 def load_run_next() -> MutableMapping[str, datetime]:
     try:
-        fp = open(RUN_NEXT_FILE_PATH, encoding="utf-8")
+        fp = open(f"{RUN_NEXT_DIR}/run_next.blob", encoding="utf-8")
     except FileNotFoundError:
         return {}
     else:
@@ -31,7 +32,7 @@ def load_run_next() -> MutableMapping[str, datetime]:
 
 
 def save_run_next(data: MutableMapping[str, datetime]):
-    with open(RUN_NEXT_FILE_PATH, "w", encoding="utf-8") as fp:
+    with open(f"{RUN_NEXT_DIR}/run_next.blob", "w", encoding="utf-8") as fp:
         toml.dump(data, fp)
 
 

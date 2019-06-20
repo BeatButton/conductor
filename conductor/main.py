@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import asyncio
 import io
+import os
 import sys
 import traceback
 from datetime import datetime
@@ -72,6 +73,15 @@ class Main:
 if __name__ == "__main__":
     utils.platform_setup()
     main = Main()
+
+    jobs_dir = os.environ.get("CONDUCTOR_JOBS_DIR")
+    if jobs_dir is not None:
+        utils.JOBS_DIR = jobs_dir
+
+    run_next_dir = os.environ.get("CONDUCTOR_RUN_NEXT_DIR")
+    if run_next_dir is not None:
+        utils.RUN_NEXT_DIR = run_next_dir
+
     try:
         asyncio.run(main.poll())
     except KeyboardInterrupt:
