@@ -21,7 +21,7 @@ class Main:
     def load_jobs(self) -> Set[str]:
         log_output = io.StringIO()
         job_ids = set()
-        for new_job in utils.get_jobs(log_output=log_output, err_output=sys.stderr):
+        for new_job in utils.get_jobs(log_output=log_output, err_output=sys.stdout):
             job_id = new_job.id
             job_ids.add(job_id)
             old_job = self.jobs.get(job_id)
