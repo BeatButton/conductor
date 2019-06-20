@@ -71,7 +71,7 @@ class Job:
         start = job.get("start")
         if start is not None:
             if type(start) is date:
-                start = datetime.combine(start, time.min)
+                job["start"] = datetime.combine(start, time.min)
             elif not isinstance(start, datetime):
                 print(
                     f"Job {job_id} field start should be a date or time",
@@ -82,7 +82,7 @@ class Job:
         end = job.get("end")
         if end is not None:
             if type(end) is date:
-                end = datetime.combine(end, time.min)
+                job["end"] = datetime.combine(end, time.min)
             elif not isinstance(end, datetime):
                 print(
                     f"Job {job_id} field end should be a date or time", file=err_output
