@@ -29,6 +29,7 @@ class Main:
                 print(log_output.getvalue(), end="")
                 self.jobs[job_id] = new_job
                 if old_job is not None:
+                    print(f"Reloaded job {job_id}")
                     self.tasks[job_id].cancel()
                 run_next = self.run_next_dict.get(job_id)
                 self.tasks[job_id] = asyncio.create_task(
@@ -50,7 +51,9 @@ class Main:
                 e = task.exception()
                 if e is not None:
                     print(f"Task {job_id} failed with exception:")
-                    traceback.print_exception(type(e), e, e.__traceback__, file=sys.stdout)
+                    traceback.print_exception(
+                        type(e), e, e.__traceback__, file=sys.stdout
+                    )
 
     async def poll(self):
         self.load_jobs()
