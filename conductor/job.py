@@ -52,20 +52,14 @@ class Job:
     def validate(
         cls, data: MutableMapping[str, Any], filepath: Path, *, err_output: TextIO
     ) -> MutableMapping[str, Any]:
+        job_id = filepath.stem
+
         job: Optional[MutableMapping[str, Any]] = data.pop("job", None)
         if job is None:
-            print("Job missing [job] section", file=err_output)
+            print(f"Job {job_id} missing [job] section", file=err_output)
             raise JobFormatError
 
-        name = job.get("name")
-
-        if name is None:
-            print("Job missing name", file=err_output)
-            raise JobFormatError
-
-        job_id = filepath.stem
         job["id"] = job_id
-
         job["environment"] = data.pop("environment", {})
         annot = cls.__annotations__  # pylint: disable=no-member
 
