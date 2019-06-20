@@ -21,3 +21,17 @@ Each job is defined in a TOML file. There must be:
 - Load the job definitions
 - Parse them and schedule the next run for each job (persist to run-next file)
 - Log to stderr whenever a job is run
+
+## Deploying
+
+- Install Python 3.7+
+- Pull Conductor from the repository
+- Create a virtual environment in the Conductor directory
+- Activate the virtual environment
+- Install the dependencies in requirements.txt
+- Set environment variables CONDUCTOR_JOBS_DIR and CONDUCTOR_RUN_NEXT_DIR
+
+
+## Notes
+
+- Conductor does not respond to keyboard interrupts whlie sleeping. It will process them as soon as it polls again or a task wakes up.
