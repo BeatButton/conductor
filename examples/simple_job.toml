@@ -1,0 +1,7 @@
+[job]
+name = "A Job"
+command = "echo %foo% > a_file"
+crontab = "* * * * *"
+
+[environment]
+foo = "bar"
