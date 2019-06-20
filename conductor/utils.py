@@ -110,9 +110,9 @@ async def schedule_job(job: Job, run_next: datetime = None):
 
     while True:
         await asyncio.sleep(secs_til_next)
+        print(f"Starting job {job.id}")
+        await job.run()
         now = datetime.now()
         secs_til_next = tab.next(now, default_utc=False)
         next_run = now + timedelta(seconds=secs_til_next)
-        print(f"Starting job {job.id}")
         update_run_next({job.id: next_run})
-        await job.run()
