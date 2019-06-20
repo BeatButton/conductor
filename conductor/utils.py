@@ -3,8 +3,8 @@ import builtins
 import os
 import sys
 from datetime import datetime, timedelta
-from glob import glob
 from typing import MutableMapping, Iterable, TextIO
+from pathlib import Path
 
 import toml
 from crontab import CronTab
@@ -69,15 +69,15 @@ def update_run_next(new_data: MutableMapping[str, datetime]):
 
 
 def get_jobs(*, log_output: TextIO = None, err_output: TextIO = None) -> Iterable[Job]:
-    for filename in glob(f"{JOBS_DIR}/*.toml"):
+    for filepath in Path(JOBS_DIR).glob("*.toml"):
         try:
-            with open(filename, encoding="utf-8") as fp:
+            with open(filepath, encoding="utf-8") as fp:
                 data = toml.load(fp)
             job = Job.from_data(
-                data, filename, log_output=log_output, err_output=err_output
+                data, filepath, log_output=log_output, err_output=err_output
             )
         except toml.TomlDecodeError:
-            print(f"Job file {filename} is not valid TOML", file=err_output)
+            print(f"Job file {filepath} is not valid TOML", file=err_output)
         except JobFormatError:
             pass
         else:
