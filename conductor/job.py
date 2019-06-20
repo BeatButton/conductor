@@ -4,6 +4,7 @@ import asyncio
 import os
 import subprocess
 import sys
+from pathlib import Path
 from dataclasses import dataclass
 from datetime import date, datetime, time
 from typing import Any, List, MutableMapping, Optional, TextIO, Type
@@ -31,7 +32,7 @@ class Job:
     def from_data(
         cls: Type[Job],
         data: MutableMapping[str, Any],
-        filename: str,
+        filepath: Path,
         *,
         log_output: TextIO = None,
         err_output: TextIO = None,
@@ -41,7 +42,7 @@ class Job:
         if err_output is None:
             err_output = open(os.devnull, "w")
 
-        job = cls.validate(data, filename, err_output=err_output)
+        job = cls.validate(data, filepath, err_output=err_output)
 
         cls.warn(job, data, log_output=log_output)
 
@@ -49,7 +50,7 @@ class Job:
 
     @classmethod
     def validate(
-        cls, data: MutableMapping[str, Any], filename, *, err_output: TextIO
+        cls, data: MutableMapping[str, Any], filepath: Path, *, err_output: TextIO
     ) -> MutableMapping[str, Any]:
         job: Optional[MutableMapping[str, Any]] = data.pop("job", None)
         if job is None:
@@ -62,7 +63,7 @@ class Job:
             print("Job missing name", file=err_output)
             raise JobFormatError
 
-        job_id = filename
+        job_id = filepath.stem
         job["id"] = job_id
 
         job["environment"] = data.pop("environment", {})
