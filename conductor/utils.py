@@ -25,23 +25,27 @@ def platform_setup():
 
 def monkey_patch():
     builtin_print = builtins.print
+
     def print_(*args, **kwargs):
         kwargs.setdefault("flush", True)
         return builtin_print(*args, **kwargs)
 
     builtins.print = print_
 
+
 def process_env_vars():
+    global JOBS_DIR, RUN_NEXT_DIR
     jobs_dir = os.environ.get("CONDUCTOR_JOBS_DIR")
     if jobs_dir is not None:
-        utils.JOBS_DIR = jobs_dir
-    if not os.path.isdir(utils.JOBS_DIR):
-        print(f"Job directory {utils.JOBS_DIR} is not a directory")
+        JOBS_DIR = jobs_dir
+    if not os.path.isdir(JOBS_DIR):
+        print(f"Job directory {JOBS_DIR} is not a directory")
         exit(1)
 
     run_next_dir = os.environ.get("CONDUCTOR_RUN_NEXT_DIR")
     if run_next_dir is not None:
-        utils.RUN_NEXT_DIR = run_next_dir
+        RUN_NEXT_DIR = run_next_dir
+
 
 def load_run_next() -> MutableMapping[str, datetime]:
     try:
