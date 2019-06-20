@@ -120,8 +120,15 @@ class Job:
         process = await asyncio.create_subprocess_shell(
             self.command,
             stdout=subprocess.DEVNULL,
-            stderr=sys.stderr,
+            stderr=subprocess.PIPE,
             env=self.environment,
             cwd=utils.JOBS_DIR,
         )
-        await process.wait()
+
+        _, stderr = await process.communicate()
+
+        if stderr:
+            print(
+                f"Job {self.id} encountered an error in execution:\n"
+                f"{stderr.decode()}"
+            )
