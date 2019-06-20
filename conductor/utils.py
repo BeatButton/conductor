@@ -26,10 +26,11 @@ def platform_setup():
 def monkey_patch():
     builtin_print = builtins.print
 
-    def print_(*args, **kwargs):
+    def print_(*args, timestamp=True, **kwargs):
         kwargs.setdefault("flush", True)
-        now = datetime.now()
-        args = (now.strftime(r"%Y-%m-%dT%H:%M:%S"), *args)
+        if timestamp:
+            now = datetime.now()
+            args = (now.strftime(r"%Y-%m-%dT%H:%M:%S"), *args)
         return builtin_print(*args, **kwargs)
 
     builtins.print = print_

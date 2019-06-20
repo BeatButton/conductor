@@ -26,7 +26,7 @@ class Main:
             job_ids.add(job_id)
             old_job = self.jobs.get(job_id)
             if new_job != old_job:
-                print(log_output.getvalue(), end="")
+                print(log_output.getvalue(), end="", timestamp=False)
                 self.jobs[job_id] = new_job
                 if old_job is not None:
                     print(f"Reloaded job {job_id}")
@@ -73,6 +73,7 @@ class Main:
 
 
 if __name__ == "__main__":
+
     utils.platform_setup()
     utils.monkey_patch()
     utils.process_env_vars()
