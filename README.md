@@ -11,7 +11,7 @@ Each job is defined in a TOML file. There must be:
 - Something to run (path to exe/script or inline script)
 - Env vars to give that something (optional)
 - A [crontab](https://en.wikipedia.org/wiki/Cron#Overview) schedule
-- A start date for when to start running the job
+- A start date for when to start running the job (optional)
 - An end date (optional)
 
 ## Scheduling and running jobs
@@ -20,7 +20,7 @@ Each job is defined in a TOML file. There must be:
 - If there is a run-next file/record, load it and run anything that was missed
 - Load the job definitions
 - Parse them and schedule the next run for each job (persist to run-next file)
-- Log to stderr whenever a job is run
+- Log to stdout whenever a job is run
 
 ## Deploying
 
