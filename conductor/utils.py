@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 import builtins
 import os
@@ -10,9 +12,7 @@ import toml
 from crontab import CronTab
 
 from .job import Job, JobFormatError
-
-RUN_NEXT_DIR: str = "config"
-JOBS_DIR: str = "jobs"
+from . import consts
 
 
 def platform_setup():
@@ -37,22 +37,21 @@ def monkey_patch():
 
 
 def process_env_vars():
-    global JOBS_DIR, RUN_NEXT_DIR
     jobs_dir = os.environ.get("CONDUCTOR_JOBS_DIR")
     if jobs_dir is not None:
-        JOBS_DIR = jobs_dir
-    if not os.path.isdir(JOBS_DIR):
-        print(f"Job directory {JOBS_DIR} is not a directory")
+        consts.JOBS_DIR = jobs_dir
+    if not os.path.isdir(consts.JOBS_DIR):
+        print(f"Job directory {consts.JOBS_DIR} is not a directory")
         exit(1)
 
     run_next_dir = os.environ.get("CONDUCTOR_RUN_NEXT_DIR")
     if run_next_dir is not None:
-        RUN_NEXT_DIR = run_next_dir
+        consts.RUN_NEXT_DIR = run_next_dir
 
 
 def load_run_next() -> MutableMapping[str, datetime]:
     try:
-        fp = open(f"{RUN_NEXT_DIR}/run_next.blob", encoding="utf-8")
+        fp = open(f"{consts.RUN_NEXT_DIR}/run_next.blob", encoding="utf-8")
     except FileNotFoundError:
         return {}
     else:
@@ -61,7 +60,7 @@ def load_run_next() -> MutableMapping[str, datetime]:
 
 
 def save_run_next(data: MutableMapping[str, datetime]):
-    with open(f"{RUN_NEXT_DIR}/run_next.blob", "w", encoding="utf-8") as fp:
+    with open(f"{consts.RUN_NEXT_DIR}/run_next.blob", "w", encoding="utf-8") as fp:
         toml.dump(data, fp)
 
 
@@ -72,7 +71,7 @@ def update_run_next(new_data: MutableMapping[str, datetime]):
 
 
 def get_jobs(*, log_output: TextIO = None, err_output: TextIO = None) -> Iterable[Job]:
-    for filepath in Path(JOBS_DIR).glob("*.toml"):
+    for filepath in Path(consts.JOBS_DIR).glob("*.toml"):
         try:
             with open(filepath, encoding="utf-8") as fp:
                 data = toml.load(fp)

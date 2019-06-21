@@ -11,7 +11,7 @@ from typing import Any, List, MutableMapping, Optional, TextIO, Type
 
 from crontab import CronTab
 
-from . import utils
+from . import consts
 
 
 class JobFormatError(Exception):
@@ -122,7 +122,7 @@ class Job:
             stdout=subprocess.DEVNULL,
             stderr=subprocess.PIPE,
             env=self.environment,
-            cwd=utils.JOBS_DIR,
+            cwd=consts.JOBS_DIR,
         )
 
         _, stderr = await process.communicate()
