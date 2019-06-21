@@ -6,8 +6,8 @@ import traceback
 from datetime import datetime
 from typing import Dict, Set
 
-import utils
-from job import Job
+from . import utils
+from .job import Job
 
 POLL_PERIOD: int = 60  # seconds
 
@@ -70,17 +70,3 @@ class Main:
 
             # check for exceptions
             self.print_task_exceptions()
-
-
-if __name__ == "__main__":
-
-    utils.platform_setup()
-    utils.monkey_patch()
-    utils.process_env_vars()
-
-    main = Main()
-
-    try:
-        asyncio.run(main.poll())
-    except KeyboardInterrupt:
-        pass

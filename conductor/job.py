@@ -11,7 +11,7 @@ from typing import Any, List, MutableMapping, Optional, TextIO, Type
 
 from crontab import CronTab
 
-import utils
+from . import utils
 
 
 class JobFormatError(Exception):

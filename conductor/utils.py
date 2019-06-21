@@ -9,7 +9,7 @@ from typing import Iterable, MutableMapping, TextIO
 import toml
 from crontab import CronTab
 
-from job import Job, JobFormatError
+from .job import Job, JobFormatError
 
 RUN_NEXT_DIR: str = "config"
 JOBS_DIR: str = "jobs"
