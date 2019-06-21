@@ -32,4 +32,4 @@ Each job is defined in a TOML file. There must be:
 
 ## Notes
 
-- Conductor does not respond to keyboard interrupts whlie sleeping. It will process them as soon as it polls again or a task wakes up.
+- Conductor does not respond to keyboard interrupts while sleeping. It will process them as soon as it polls again or a task wakes up. This is a known bug in Python and will be fixed with the release of 3.8.
