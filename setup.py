@@ -18,6 +18,6 @@ setup(
     long_description_content_type="text/markdown",
     author="Tall Tree Administrators",
     packages=find_packages(),
-    python_requires=">=3.7,<4"
+    python_requires=">=3.7,<4",
     install_requires=install_requires,
 )
