@@ -121,7 +121,7 @@ class Job:
             self.command,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.PIPE,
-            env=self.environment,
+            env={**os.environ, **self.environment},
             cwd=consts.JOBS_DIR,
         )
 
