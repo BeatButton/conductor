@@ -41,6 +41,7 @@ def load_run_next() -> MutableMapping[str, datetime]:
         os.makedirs(consts.RUN_NEXT_DIR)
     except FileExistsError:
         pass
+
     try:
         fp = open(f"{consts.RUN_NEXT_DIR}/run_next.blob", encoding="utf-8")
     except FileNotFoundError:
