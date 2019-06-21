@@ -1,7 +1,7 @@
-**/.mypy_cache
+.mypy_cache
 .vscode
 __pycache__
-venv
-config
-jobs
-conductor.egg-info
+/venv
+/config
+/jobs
+/conductor.egg-info
