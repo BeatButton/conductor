@@ -41,8 +41,7 @@ def process_env_vars():
     if jobs_dir is not None:
         consts.JOBS_DIR = jobs_dir
     if not os.path.isdir(consts.JOBS_DIR):
-        print(f"Job directory {consts.JOBS_DIR} is not a directory")
-        exit(1)
+        raise RuntimeError(f"Job directory {consts.JOBS_DIR} is not a directory")
 
     run_next_dir = os.environ.get("CONDUCTOR_RUN_NEXT_DIR")
     if run_next_dir is not None:
