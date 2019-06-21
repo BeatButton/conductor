@@ -25,12 +25,10 @@ Each job is defined in a TOML file. There must be:
 ## Deploying
 
 - Install Python 3.7+
-- Pull Conductor from the repository
-- Create a virtual environment in the Conductor directory
-- Activate the virtual environment
-- Install the dependencies in requirements.txt
+- Install conductor with `pip install git+ssh://git@gitlab.com/ttadmin/conductor.git`
+- Alternatively, you can clone it and install it with `pip install -e /path/to/conductor`
 - Set environment variables CONDUCTOR_JOBS_DIR and CONDUCTOR_RUN_NEXT_DIR
-
+- Run with `python -m conductor`
 
 ## Notes
 
