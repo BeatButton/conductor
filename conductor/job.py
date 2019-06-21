@@ -12,10 +12,8 @@ from typing import Any, List, MutableMapping, Optional, TextIO, Type
 from crontab import CronTab
 
 from . import consts
-
-
-class JobFormatError(Exception):
-    pass
+from .exceptions import JobFormatError
+from .utils import log
 
 
 @dataclass
@@ -56,7 +54,7 @@ class Job:
 
         job: Optional[MutableMapping[str, Any]] = data.pop("job", None)
         if job is None:
-            print(f"Job {job_id} missing [job] section", file=err_output)
+            log(f"Job {job_id} missing [job] section", file=err_output)
             raise JobFormatError
 
         job["id"] = job_id
@@ -65,7 +63,7 @@ class Job:
 
         for field, type_ in annot.items():
             if not type_.startswith("Optional") and field not in job:
-                print(f"Job {job_id} missing required field {field}", file=err_output)
+                log(f"Job {job_id} missing required field {field}", file=err_output)
                 raise JobFormatError
 
         start = job.get("start")
@@ -73,7 +71,7 @@ class Job:
             if type(start) is date:
                 job["start"] = datetime.combine(start, time.min)
             elif not isinstance(start, datetime):
-                print(
+                log(
                     f"Job {job_id} field start should be a date or time",
                     file=err_output,
                 )
@@ -84,15 +82,13 @@ class Job:
             if type(end) is date:
                 job["end"] = datetime.combine(end, time.min)
             elif not isinstance(end, datetime):
-                print(
-                    f"Job {job_id} field end should be a date or time", file=err_output
-                )
+                log(f"Job {job_id} field end should be a date or time", file=err_output)
                 raise JobFormatError
 
         try:
             CronTab(job["crontab"])
         except ValueError:
-            print(f"Job {job_id} has invalid crontab entry", file=err_output)
+            log(f"Job {job_id} has invalid crontab entry", file=err_output)
             raise JobFormatError
 
         return job
@@ -110,11 +106,11 @@ class Job:
         fields = tuple(job)
         for field in fields:
             if field not in annot:
-                print(f"Job {job_id} had extra field {field}", file=log_output)
+                log(f"Job {job_id} had extra field {field}", file=log_output)
                 del job[field]
 
         for section in data:
-            print(f"Job {job_id} had extra section {section}", file=log_output)
+            log(f"Job {job_id} had extra section {section}", file=log_output)
 
     async def run(self):
         process = await asyncio.create_subprocess_shell(
@@ -128,7 +124,7 @@ class Job:
         _, stderr = await process.communicate()
 
         if stderr:
-            print(
+            log(
                 f"Job {self.id} encountered an error in execution:\n"
                 f"{stderr.decode()}"
             )

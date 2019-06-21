@@ -1,0 +1,2 @@
+class JobFormatError(Exception):
+    pass

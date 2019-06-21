@@ -3,11 +3,17 @@ import asyncio
 import io
 import sys
 import traceback
-from datetime import datetime
-from typing import Dict, Set
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Dict, Iterable, Set, TextIO
 
-from . import utils
+import toml
+from crontab import CronTab
+
+from . import consts
+from .exceptions import JobFormatError
 from .job import Job
+from .utils import load_run_next, log, update_run_next
 
 POLL_PERIOD: int = 60  # seconds
 
@@ -16,24 +22,24 @@ class Main:
     def __init__(self):
         self.tasks: Dict[str, asyncio.Task] = {}
         self.jobs: Dict[str, Job] = {}
-        self.run_next_dict: Dict[str, datetime] = utils.load_run_next()
+        self.run_next_dict: Dict[str, datetime] = load_run_next()
 
     def load_jobs(self) -> Set[str]:
         log_output = io.StringIO()
         job_ids = set()
-        for new_job in utils.get_jobs(log_output=log_output, err_output=sys.stdout):
+        for new_job in self.get_jobs(log_output=log_output, err_output=sys.stdout):
             job_id = new_job.id
             job_ids.add(job_id)
             old_job = self.jobs.get(job_id)
             if new_job != old_job:
-                print(log_output.getvalue(), end="", timestamp=False)
+                print(log_output.getvalue(), end="")
                 self.jobs[job_id] = new_job
                 if old_job is not None:
-                    print(f"Reloaded job {job_id}")
+                    log(f"Reloaded job {job_id}")
                     self.tasks[job_id].cancel()
                 run_next = self.run_next_dict.get(job_id)
                 self.tasks[job_id] = asyncio.create_task(
-                    utils.schedule_job(new_job, run_next)
+                    self.schedule_job(new_job, run_next)
                 )
             log_output.seek(0)
             log_output.truncate()
@@ -50,14 +56,14 @@ class Main:
             if task.done():
                 e = task.exception()
                 if e is not None:
-                    print(f"Task {job_id} failed with exception:")
+                    log(f"Task {job_id} failed with exception:")
                     traceback.print_exception(
                         type(e), e, e.__traceback__, file=sys.stdout
                     )
 
     async def poll(self):
         self.load_jobs()
-        print(f"Loaded {len(self.jobs)} jobs")
+        log(f"Loaded {len(self.jobs)} jobs")
 
         while True:
             await asyncio.sleep(POLL_PERIOD)
@@ -70,3 +76,52 @@ class Main:
 
             # check for exceptions
             self.print_task_exceptions()
+
+    @staticmethod
+    def get_jobs(
+        *, log_output: TextIO = None, err_output: TextIO = None
+    ) -> Iterable[Job]:
+        for filepath in Path(consts.JOBS_DIR).glob("*.toml"):
+            try:
+                with open(filepath, encoding="utf-8") as fp:
+                    data = toml.load(fp)
+                job = Job.from_data(
+                    data, filepath, log_output=log_output, err_output=err_output
+                )
+            except toml.TomlDecodeError:
+                log(f"Job file {filepath} is not valid TOML", file=err_output)
+            except JobFormatError:
+                pass
+            else:
+                yield job
+
+    @staticmethod
+    async def schedule_job(job: Job, run_next: datetime = None):
+        now = datetime.now()
+
+        if job.start is not None and job.start > now:
+            log(f"Not starting job {job.id}: start date in the future")
+            return
+
+        if job.end is not None and job.end <= now:
+            log(f"Not starting job {job.id}: end date in the past")
+            return
+
+        tab = CronTab(job.crontab)
+
+        if run_next is None:
+            now = datetime.now()
+            secs_til_next = tab.next(now, default_utc=False)
+            next_run = now + timedelta(seconds=secs_til_next)
+            update_run_next({job.id: next_run})
+        else:
+            secs_til_next = (run_next - datetime.now()).total_seconds()
+
+        while True:
+            await asyncio.sleep(secs_til_next)
+            log(f"Starting job {job.id}")
+            await job.run()
+            now = datetime.now()
+            secs_til_next = tab.next(now, default_utc=False)
+            next_run = now + timedelta(seconds=secs_til_next)
+            update_run_next({job.id: next_run})
