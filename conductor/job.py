@@ -67,9 +67,10 @@ class Job:
 
         start = job.get("start")
         if start is not None:
-            if type(start) is date:
-                job["start"] = datetime.combine(start, time.min)
-            elif not isinstance(start, datetime):
+            if isinstance(start, date):
+                if not isinstance(start, datetime):
+                    job["start"] = datetime.combine(start, time.min)
+            else:
                 log(
                     f"Job {job_id} field start should be a date or time",
                     file=err_output,
@@ -78,9 +79,10 @@ class Job:
 
         end = job.get("end")
         if end is not None:
-            if type(end) is date:
-                job["end"] = datetime.combine(end, time.min)
-            elif not isinstance(end, datetime):
+            if isinstance(end, date):
+                if not isinstance(end, datetime):
+                    job["end"] = datetime.combine(end, time.min)
+            else:
                 log(f"Job {job_id} field end should be a date or time", file=err_output)
                 raise JobFormatError
 
