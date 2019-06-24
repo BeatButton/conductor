@@ -67,24 +67,22 @@ class Job:
 
         start = job.get("start")
         if start is not None:
-            if isinstance(start, date):
-                if not isinstance(start, datetime):
-                    job["start"] = datetime.combine(start, time.min)
-            else:
+            if not isinstance(start, date):
                 log(
                     f"Job {job_id} field start should be a date or time",
                     file=err_output,
                 )
                 raise JobFormatError
+            if not isinstance(start, datetime):
+                job["start"] = datetime.combine(start, time.min)
 
         end = job.get("end")
         if end is not None:
-            if isinstance(end, date):
-                if not isinstance(end, datetime):
-                    job["end"] = datetime.combine(end, time.min)
-            else:
+            if not isinstance(end, date):
                 log(f"Job {job_id} field end should be a date or time", file=err_output)
                 raise JobFormatError
+            if not isinstance(end, datetime):
+                job["end"] = datetime.combine(end, time.min)
 
         try:
             CronTab(job["crontab"])
