@@ -2,10 +2,10 @@
 import asyncio
 import sys
 import traceback
+import warnings
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, Iterable, Set
-import warnings
 
 import toml
 from crontab import CronTab
