@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from datetime import date, datetime, time
 from pathlib import Path
 from typing import Any, MutableMapping, Optional, Type, Union
-from warnings import warn
 
 from crontab import CronTab
 
@@ -33,9 +32,9 @@ class Job:
     ) -> Job:
         job = cls.validate(data, filepath)
 
-        cls.warn(job, data)
-
         cls.cast(job)
+
+        cls.warn(job, data)
 
         return cls(**job)
 
@@ -62,7 +61,7 @@ class Job:
             if optional:
                 args = realtype.__args__
                 if len(args) > 2:
-                    realtype = Union[args[:-1]]
+                    realtype = Union[args[:-1]]  # type: ignore
                 else:
                     realtype = args[0]
                     origin = getattr(realtype, "__origin__", None)
@@ -90,14 +89,22 @@ class Job:
     def warn(cls, job: MutableMapping[str, Any], data: MutableMapping[str, Any]):
         annot = cls.__annotations__  # pylint: disable=no-member
         job_id = job["id"]
-        fields = tuple(job)
-        for field in fields:
-            if field not in annot:
-                warn(JobFormatWarning(f"Job {job_id} had extra field {field}"))
-                del job[field]
+        warnings = []
 
-        for section in data:
-            warn(JobFormatWarning(f"Job {job_id} had extra section {section}"))
+        fields = set(job)
+        extra_fields = fields - set(annot)
+        if extra_fields:
+            for field in extra_fields:
+                del job[field]
+            warnings.append(f"extra field(s) {', '.join(extra_fields)}")
+
+        if data:
+            warnings.append(f"extra section(s) {', '.join(data)}")
+
+        if warnings:
+            raise JobFormatWarning(
+                f"Job {job_id} had {' and '.join(warnings)}", cls(**job)
+            )
 
     @classmethod
     def cast(cls, job: MutableMapping[str, Any]):

@@ -83,8 +83,11 @@ class Main:
                     job = Job.from_data(data, filepath)
                 except toml.TomlDecodeError:
                     log(f"Job file {filepath} is not valid TOML")
-                except (JobFormatError, JobFormatWarning) as e:
+                except JobFormatError as e:
                     log(e)
+                except JobFormatWarning as w:
+                    log(w.message)
+                    yield w.job
                 else:
                     yield job
 

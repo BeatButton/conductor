@@ -3,4 +3,6 @@ class JobFormatError(Exception):
 
 
 class JobFormatWarning(Warning):
-    pass
+    def __init__(self, message, job):
+        self.message = message
+        self.job = job
