@@ -6,11 +6,12 @@ import subprocess
 from dataclasses import dataclass
 from datetime import date, datetime, time
 from pathlib import Path
-from typing import Any, List, MutableMapping, Optional, TextIO, Type
+from typing import Any, List, MutableMapping, Optional, TextIO, Type, Union
 
 from crontab import CronTab
 
 from . import consts
+from .consts import NoneType
 from .exceptions import JobFormatError
 from .utils import log
 
@@ -21,8 +22,8 @@ class Job:
     id: str
     command: str
     crontab: str
-    start: Optional[datetime] = None
-    end: Optional[datetime] = None
+    start: Optional[Union[datetime, date]] = None
+    end: Optional[Union[datetime, date]] = None
     environment: Optional[MutableMapping[str, Any]] = None
 
     @classmethod
@@ -43,6 +44,8 @@ class Job:
 
         cls.warn(job, data, log_output=log_output)
 
+        cls.cast(job)
+
         return cls(**job)
 
     @classmethod
@@ -61,28 +64,33 @@ class Job:
         annot = cls.__annotations__  # pylint: disable=no-member
 
         for field, type_ in annot.items():
-            if not type_.startswith("Optional") and field not in job:
+            realtype = eval(type_)
+            value = job.get(field)
+            origin = getattr(realtype, "__origin__", None)
+            optional = origin is Union and realtype.__args__[-1] is NoneType
+
+            if optional:
+                args = realtype.__args__
+                if len(args) > 2:
+                    realtype = Union[args[:-1]]
+                else:
+                    realtype = args[0]
+                    origin = getattr(realtype, "__origin__", None)
+            elif value is None:
                 log(f"Job {job_id} missing required field {field}", file=err_output)
                 raise JobFormatError
 
-        start = job.get("start")
-        if start is not None:
-            if not isinstance(start, date):
+            if origin is Union:
+                realtype = realtype.__args__
+            elif origin is not None:
+                realtype = origin
+
+            if value is not None and not isinstance(value, realtype):
                 log(
-                    f"Job {job_id} field start should be a date or time",
+                    f"Field {field} in job {job_id} got {type(value)} but expected {realtype}",
                     file=err_output,
                 )
                 raise JobFormatError
-            if not isinstance(start, datetime):
-                job["start"] = datetime.combine(start, time.min)
-
-        end = job.get("end")
-        if end is not None:
-            if not isinstance(end, date):
-                log(f"Job {job_id} field end should be a date or time", file=err_output)
-                raise JobFormatError
-            if not isinstance(end, datetime):
-                job["end"] = datetime.combine(end, time.min)
 
         try:
             CronTab(job["crontab"])
@@ -110,6 +118,18 @@ class Job:
 
         for section in data:
             log(f"Job {job_id} had extra section {section}", file=log_output)
+
+    @classmethod
+    def cast(cls, job: MutableMapping[str, Any]):
+        start = job.get("start")
+        if start is not None:
+            if not isinstance(start, datetime):
+                job["start"] = datetime.combine(start, time.min)
+
+        end = job.get("end")
+        if end is not None:
+            if not isinstance(end, datetime):
+                job["end"] = datetime.combine(end, time.min)
 
     async def run(self):
         process = await asyncio.create_subprocess_shell(
