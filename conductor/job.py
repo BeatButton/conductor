@@ -6,13 +6,14 @@ import subprocess
 from dataclasses import dataclass
 from datetime import date, datetime, time
 from pathlib import Path
-from typing import Any, List, MutableMapping, Optional, TextIO, Type, Union
+from typing import Any, MutableMapping, Optional, Type, Union
+from warnings import warn
 
 from crontab import CronTab
 
 from . import consts
 from .consts import NoneType
-from .exceptions import JobFormatError
+from .exceptions import JobFormatError, JobFormatWarning
 from .utils import log
 
 
@@ -28,21 +29,11 @@ class Job:
 
     @classmethod
     def from_data(
-        cls: Type[Job],
-        data: MutableMapping[str, Any],
-        filepath: Path,
-        *,
-        log_output: TextIO = None,
-        err_output: TextIO = None,
+        cls: Type[Job], data: MutableMapping[str, Any], filepath: Path
     ) -> Job:
-        if log_output is None:
-            log_output = open(os.devnull, "w")
-        if err_output is None:
-            err_output = open(os.devnull, "w")
+        job = cls.validate(data, filepath)
 
-        job = cls.validate(data, filepath, err_output=err_output)
-
-        cls.warn(job, data, log_output=log_output)
+        cls.warn(job, data)
 
         cls.cast(job)
 
@@ -50,14 +41,13 @@ class Job:
 
     @classmethod
     def validate(
-        cls, data: MutableMapping[str, Any], filepath: Path, *, err_output: TextIO
+        cls, data: MutableMapping[str, Any], filepath: Path
     ) -> MutableMapping[str, Any]:
         job_id = filepath.stem
 
         job: Optional[MutableMapping[str, Any]] = data.pop("job", None)
         if job is None:
-            log(f"Job {job_id} missing [job] section", file=err_output)
-            raise JobFormatError
+            raise JobFormatError(f"Job {job_id} missing [job] section")
 
         job["id"] = job_id
         job["environment"] = data.pop("environment", {})
@@ -77,8 +67,7 @@ class Job:
                     realtype = args[0]
                     origin = getattr(realtype, "__origin__", None)
             elif value is None:
-                log(f"Job {job_id} missing required field {field}", file=err_output)
-                raise JobFormatError
+                raise JobFormatError(f"Job {job_id} missing required field {field}")
 
             if origin is Union:
                 realtype = realtype.__args__
@@ -86,38 +75,29 @@ class Job:
                 realtype = origin
 
             if value is not None and not isinstance(value, realtype):
-                log(
-                    f"Field {field} in job {job_id} got {type(value)} but expected {realtype}",
-                    file=err_output,
+                raise JobFormatError(
+                    f"Field {field} in job {job_id} got {type(value)} but expected {realtype}"
                 )
-                raise JobFormatError
 
         try:
             CronTab(job["crontab"])
         except ValueError:
-            log(f"Job {job_id} has invalid crontab entry", file=err_output)
-            raise JobFormatError
+            raise JobFormatError(f"Job {job_id} has invalid crontab entry")
 
         return job
 
     @classmethod
-    def warn(
-        cls,
-        job: MutableMapping[str, Any],
-        data: MutableMapping[str, Any],
-        *,
-        log_output: TextIO,
-    ):
+    def warn(cls, job: MutableMapping[str, Any], data: MutableMapping[str, Any]):
         annot = cls.__annotations__  # pylint: disable=no-member
         job_id = job["id"]
         fields = tuple(job)
         for field in fields:
             if field not in annot:
-                log(f"Job {job_id} had extra field {field}", file=log_output)
+                warn(JobFormatWarning(f"Job {job_id} had extra field {field}"))
                 del job[field]
 
         for section in data:
-            log(f"Job {job_id} had extra section {section}", file=log_output)
+            warn(JobFormatWarning(f"Job {job_id} had extra section {section}"))
 
     @classmethod
     def cast(cls, job: MutableMapping[str, Any]):
