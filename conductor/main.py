@@ -11,8 +11,7 @@ import toml
 from crontab import CronTab
 
 from . import consts
-from .exceptions import JobFormatError, JobFormatWarning
-from .job import Job
+from .job import Job, JobFormatError, JobFormatWarning
 from .utils import load_run_next, log, update_run_next
 
 POLL_PERIOD: int = 60  # seconds
@@ -86,7 +85,7 @@ class Main:
                 except JobFormatError as e:
                     log(e)
                 except JobFormatWarning as w:
-                    log(w.message)
+                    log(w)
                     yield w.job
                 else:
                     yield job

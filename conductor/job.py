@@ -6,14 +6,23 @@ import subprocess
 from dataclasses import dataclass
 from datetime import date, datetime, time
 from pathlib import Path
-from typing import Any, MutableMapping, Optional, Type, Union
+from typing import Any, MutableMapping, Optional, Sequence, Type, Union
 
 from crontab import CronTab
 
 from . import consts
 from .consts import NoneType
-from .exceptions import JobFormatError, JobFormatWarning
 from .utils import log
+
+
+class JobFormatError(Exception):
+    pass
+
+
+class JobFormatWarning(Warning):
+    def __init__(self, job: Job, *args: Sequence[str]):
+        self.job = job
+        super().__init__(*args)
 
 
 @dataclass
@@ -103,7 +112,7 @@ class Job:
 
         if warnings:
             raise JobFormatWarning(
-                f"Job {job_id} had {' and '.join(warnings)}", cls(**job)
+                cls(**job), f"Job {job_id} had {' and '.join(warnings)}"
             )
 
     @classmethod
