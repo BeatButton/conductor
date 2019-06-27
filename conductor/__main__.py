@@ -1,5 +1,4 @@
 import asyncio
-import warnings
 
 from . import utils
 from .main import Main
