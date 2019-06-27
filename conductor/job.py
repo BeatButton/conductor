@@ -31,6 +31,7 @@ class Job:
     id: str
     command: str
     crontab: str
+    directory: Optional[Union[str, Path]]
     start: Optional[Union[datetime, date]] = None
     end: Optional[Union[datetime, date]] = None
     environment: Optional[MutableMapping[str, Any]] = None
@@ -92,6 +93,15 @@ class Job:
         except ValueError:
             raise JobFormatError(f"Job {job_id} has invalid crontab entry")
 
+        jobdir = job.get("directory")
+        if jobdir is not None:
+            path = Path(jobdir)
+            if not path.is_dir():
+                raise JobFormatError(
+                    f"Field directory in job {job_id} was not a directory: {path}"
+                )
+            job["directory"] = path
+
         return job
 
     @classmethod
@@ -133,7 +143,7 @@ class Job:
             stdout=subprocess.DEVNULL,
             stderr=subprocess.PIPE,
             env={**os.environ, **self.environment},
-            cwd=consts.JOBS_DIR,
+            cwd=self.directory or consts.JOBS_DIR,
         )
 
         _, stderr = await process.communicate()
