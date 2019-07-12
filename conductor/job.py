@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import os
 import subprocess
+import sys
 from dataclasses import dataclass
 from datetime import date, datetime, time
 from pathlib import Path
@@ -25,6 +26,10 @@ class JobFormatWarning(Warning):
         super().__init__(*args)
 
 
+STDOUT_MODE = object()
+STDERR_MODE = object()
+
+
 @dataclass
 class Job:
     name: str
@@ -32,6 +37,8 @@ class Job:
     command: str
     crontab: str
     directory: Optional[Union[str, Path]] = None
+    stdout: Optional[Union[str, Path, int]] = None
+    stderr: Optional[Union[str, Path, int]] = None
     start: Optional[Union[datetime, date]] = None
     end: Optional[Union[datetime, date]] = None
     environment: Optional[MutableMapping[str, Any]] = None
@@ -102,6 +109,25 @@ class Job:
                 )
             job["directory"] = path
 
+        stdout = job.get("stdout")
+        job[STDOUT_MODE] = "w"
+        if stdout is not None:
+            if stdout == "stdout":
+                job["stdout"] = sys.stdout.fileno()
+            elif stdout == "stderr":
+                job["stdout"] = sys.stderr.fileno()
+            else:
+                job[STDOUT_MODE] = "a"
+        else:
+            job["stdout"] = os.devnull
+
+        stderr = job.get("stderr")
+        if stderr is not None:
+            if stderr == "stdout":
+                job["stderr"] = sys.stdout.fileno()
+            elif stderr == "stderr":
+                job["stderr"] = sys.stderr.fileno()
+
         return job
 
     @classmethod
@@ -140,16 +166,22 @@ class Job:
     async def run(self):
         process = await asyncio.create_subprocess_shell(
             self.command,
-            stdout=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             env={**os.environ, **self.environment},
             cwd=self.directory or consts.JOBS_DIR,
+            text=True,
         )
 
-        _, stderr = await process.communicate()
+        stdout, stderr = await process.communicate()
+
+        if stdout and self.stdout is not None:
+            with open(self.stdout, "a", encoding="utf-8") as fp:
+                log(stdout, file=fp)
 
         if stderr:
-            log(
-                f"Job {self.id} encountered an error in execution:\n"
-                f"{stderr.decode()}"
-            )
+            if self.stderr is None:
+                log(f"Job {self.id} encountered an error in execution:\n{stderr}")
+            else:
+                with open(self.stderr, "a", encoding="utf-8") as fp:
+                    log(stderr, file=fp)

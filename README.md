@@ -22,6 +22,10 @@ Each job is defined in a TOML file.
 - `start_date`: The date at which to start running this job. The default is immediately.
 
 - `stop_date`: The date at which to stop running this job. The default is never.
+
+- `stdout`: The path to write the job's standard output to. The default is nowhere.
+
+- `stderr`: The path to write the job's standard error to. The default is standard output.
   
 ### Optional section: `[environment]`
 
