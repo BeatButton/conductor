@@ -31,7 +31,7 @@ class Job:
     id: str
     command: str
     crontab: str
-    directory: Optional[Union[str, Path]]
+    directory: Optional[Union[str, Path]] = None
     start: Optional[Union[datetime, date]] = None
     end: Optional[Union[datetime, date]] = None
     environment: Optional[MutableMapping[str, Any]] = None
