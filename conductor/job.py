@@ -140,18 +140,23 @@ class Job:
                 job["end"] = datetime.combine(end, time.min)
 
     async def run(self):
+        cwd = self.directory or consts.JOBS_DIR
         process = await asyncio.create_subprocess_shell(
             self.command,
-            stdout=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             env={**os.environ, **self.environment},
-            cwd=self.directory or consts.JOBS_DIR,
+            cwd=cwd,
+            text=True,
         )
 
-        _, stderr = await process.communicate()
+        stdout, stderr = map(bytes.decode, await process.communicate())
 
-        if stderr:
-            log(
-                f"Job {self.id} encountered an error in execution:\n"
-                f"{stderr.decode()}"
-            )
+        if stdout and self.stdout is not None:
+            with open(cwd / self.stdout, "a", encoding="utf-8") as fp:
+                assert type(stdout) is str
+                log(stdout, file=fp)
+
+        if stderr and self.stderr is not None:
+            with open(cwd / self.stderr, "a", encoding="utf-8") as fp:
+                log(stderr, file=fp)
