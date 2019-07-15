@@ -5,7 +5,7 @@ import traceback
 import warnings
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, Iterable, Set
+from typing import Dict, Iterable, Set, Tuple
 
 import toml
 from crontab import CronTab
@@ -25,11 +25,12 @@ class Main:
 
     def load_jobs(self) -> Set[str]:
         job_ids = set()
-        for new_job in self.get_jobs():
+        for new_job, warnings in self.get_jobs():
             job_id = new_job.id
             job_ids.add(job_id)
             old_job = self.jobs.get(job_id)
             if new_job != old_job:
+                log(warnings)
                 self.jobs[job_id] = new_job
                 if old_job is not None:
                     log(f"Reloaded job {job_id}")
@@ -73,7 +74,7 @@ class Main:
             self.print_task_exceptions()
 
     @staticmethod
-    def get_jobs() -> Iterable[Job]:
+    def get_jobs() -> Iterable[Tuple[Job, str]]:
         with warnings.catch_warnings():
             for filepath in Path(consts.JOBS_DIR).glob("*.toml"):
                 try:
@@ -85,10 +86,9 @@ class Main:
                 except JobFormatError as e:
                     log(e)
                 except JobFormatWarning as w:
-                    log(w)
-                    yield w.job
+                    yield w.job, str(w)
                 else:
-                    yield job
+                    yield job, ""
 
     @staticmethod
     async def schedule_job(job: Job, run_next: datetime = None):
