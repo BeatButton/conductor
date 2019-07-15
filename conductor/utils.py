@@ -2,6 +2,7 @@ import asyncio
 import os
 import sys
 from datetime import datetime
+from pathlib import Path
 from typing import MutableMapping
 
 import toml
@@ -27,13 +28,13 @@ def log(*args, **kwargs):
 def process_env_vars():
     jobs_dir = os.environ.get("CONDUCTOR_JOBS_DIR")
     if jobs_dir is not None:
-        consts.JOBS_DIR = jobs_dir
-    if not os.path.isdir(consts.JOBS_DIR):
+        consts.JOBS_DIR = Path(jobs_dir)
+    if not consts.JOBS_DIR.exists():
         raise RuntimeError(f"Job directory {consts.JOBS_DIR} is not a directory")
 
     run_next_dir = os.environ.get("CONDUCTOR_RUN_NEXT_DIR")
     if run_next_dir is not None:
-        consts.RUN_NEXT_DIR = run_next_dir
+        consts.RUN_NEXT_DIR = Path(run_next_dir)
 
 
 def load_run_next() -> MutableMapping[str, datetime]:

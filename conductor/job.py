@@ -32,6 +32,8 @@ class Job:
     command: str
     crontab: str
     directory: Optional[Union[str, Path]] = None
+    stdout: Optional[Union[str, Path]] = None
+    stderr: Optional[Union[str, Path]] = None
     start: Optional[Union[datetime, date]] = None
     end: Optional[Union[datetime, date]] = None
     environment: Optional[MutableMapping[str, Any]] = None
