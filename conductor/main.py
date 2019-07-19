@@ -30,7 +30,8 @@ class Main:
             job_ids.add(job_id)
             old_job = self.jobs.get(job_id)
             if new_job != old_job:
-                log(warnings)
+                if warnings:
+                    log(warnings)
                 self.jobs[job_id] = new_job
                 if old_job is not None:
                     log(f"Reloaded job {job_id}")
@@ -116,6 +117,7 @@ class Main:
             await asyncio.sleep(secs_til_next)
             log(f"Starting job {job.id}")
             await job.run()
+            log(f"Job {job.id} completed successfully")
             now = datetime.now()
             secs_til_next = tab.next(now, default_utc=False)
             next_run = now + timedelta(seconds=secs_til_next)
