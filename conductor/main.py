@@ -117,7 +117,6 @@ class Main:
             await asyncio.sleep(secs_til_next)
             log(f"Starting job {job.id}")
             await job.run()
-            log(f"Job {job.id} completed successfully")
             now = datetime.now()
             secs_til_next = tab.next(now, default_utc=False)
             next_run = now + timedelta(seconds=secs_til_next)
