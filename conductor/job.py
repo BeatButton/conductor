@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import os
 import subprocess
+from time import strftime
 from dataclasses import dataclass
 from datetime import date, datetime, time
 from pathlib import Path
@@ -150,13 +151,14 @@ class Job:
             text=True,
         )
 
-        stdout, stderr = map(bytes.decode, await process.communicate())
+        stdout, stderr = map(str.strip, map(bytes.decode, await process.communicate()))
 
         if stdout and self.stdout is not None:
-            with open(cwd / self.stdout, "a", encoding="utf-8") as fp:
-                assert type(stdout) is str
+            filename = strftime(self.stdout)
+            with open(filename, "a", encoding="utf-8") as fp:
                 log(stdout, file=fp)
 
         if stderr and self.stderr is not None:
-            with open(cwd / self.stderr, "a", encoding="utf-8") as fp:
+            filename = strftime(self.stderr)
+            with open(filename, "a", encoding="utf-8") as fp:
                 log(stderr, file=fp)

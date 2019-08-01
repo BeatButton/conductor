@@ -21,7 +21,7 @@ def platform_setup():
 def log(*args, **kwargs):
     kwargs.setdefault("flush", True)
     now = datetime.now()
-    args = (now.strftime(r"%Y-%m-%dT%H:%M:%S"), *args)
+    args = (now.strftime(r"[%Y-%m-%d %H:%M:%S]"), *args)
     return print(*args, **kwargs)
 
 
