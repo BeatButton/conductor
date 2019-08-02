@@ -148,7 +148,6 @@ class Job:
             stderr=subprocess.PIPE,
             env={**os.environ, **self.environment},
             cwd=cwd,
-            text=True,
         )
 
         stdout, stderr = map(str.strip, map(bytes.decode, await process.communicate()))
